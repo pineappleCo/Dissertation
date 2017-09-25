@@ -13,3 +13,11 @@ def index():
 def about():
     #render template is used to specify which html file to load in a view
     return render_template("about.html")
+
+@app.route('/guide')
+def guide():
+    return render_template("guide.html")
+
+@app.route('/upload')
+def upload():
+    return render_template("upload.html")
