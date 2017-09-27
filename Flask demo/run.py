@@ -26,5 +26,9 @@ def upload_file():
         rdf_parser.parse(f)
         return render_template('index.html')
 
+@app.route('/upload/<path:filename>', methods=["GET"])
+def download():
+    return send_from_directory(directory="downloads", filename=filename)
+
 if __name__ == '__main__':
     app.run()
