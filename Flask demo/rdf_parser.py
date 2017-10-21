@@ -1,166 +1,80 @@
 import sys
-from rdflib import Graph, Literal
-from rdflib.namespace import Namespace, RDF, URIRef, RDFS, OWL
 
-def store_rdf(data_lines, genename_dict):
+def parse(filename, source):
+    #read each line is a string in list of strings
+    with open(filename) as f:
+        datalines = f.read().splitlines()
+    datalines.pop(0) #remove first list item
+    print(datalines)
+    tabsplit_datalines = [line.split('\t') for line in datalines]
+    print(tabsplit_datalines)
+    print("HERE IT IS --->>" + str(tabsplit_datalines[0][35]))
+    if source == "biogrid":
+        filtered = [biogrid_filter(line) for line in tabsplit_datalines]
+    elif source == "dip":
+        filtered = [dip_filter(line) for line in tabsplit_datalines]
+    elif source == "intact":
+        filtered = [intact_filter(line) for line in tabsplit_datalines]
+    else:
+        return "not a supported source, supported sources are biogrid, intact and dip"
+    return filtered
 
-	ppi = Namespace("http://ppi2rdf.org/proteins#")
-	pmed = Namespace("http://www.ncbi.nlm.nih.gov/pubmed/")
-	# Note: ppi.attribute vs. ppi[item]
+def biogrid_filter(tab_split):
+    interactorAId = tab_split[0][22:]
+    interactorBId = tab_split[1][22:]
+    detectionMethod = tab_split[6].split('(')[1][:-1]
+    author = tab_split[7]
+    pubId = tab_split[8][7:]
+    taxA = tab_split[9][6:]
+    taxB = tab_split[10][6:]
+    interactionType = tab_split[11].split('(')[1][:-1]
+    source = "biogrid"
+    interactionId = tab_split[13][8:]
+    return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId]
 
-	g = Graph()
+def dip_filter(tab_split):
+    interactorAId = tab_split[0].split('|')[0]
+    interactorBId = tab_split[1].split('|')[0]
+    detectionMethod = tab_split[6].split('(')[1][:-1]
+    author = tab_split[7]
+    pubId = [pub[7:] for pub in tab_split[8].split('|')]
+    taxA = tab_split[9][6:].split('(')[0][:-1]
+    taxB = tab_split[10][6:].split('(')[0][:-1]
+    interactionType = tab_split[11].split('(')[1][:-1]
+    source = "dip"
+    interactionId = tab_split[13]
+    return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId]
 
-	sys.stderr.write("Storing RDF")
+def intact_filter(tab_split):
+    interactorAId = tab_split[0][10:]
+    interactorBId = tab_split[1][10:]
+    detectionMethod = tab_split[6].split('(')[1][:-1]
+    author = tab_split[7]
+    pubId = [pub.split(':')[1] for pub in tab_split[8].split('|')]
+    taxA = [pub.split(':')[1].split('(')[0] for pub in tab_split[9].split('|')]
+    taxB = [pub.split(':')[1].split('(')[0] for pub in tab_split[10].split('|')]
+    interactionType = tab_split[11].split('(')[1][:-1]
+    source = "intact"
+    interactionId = [id.split(':')[1] for id in tab_split[13].split('|')]
+    bioRoleA = tab_split[16].split('(')[1][:-1]
+    bioRoleB = tab_split[17].split('(')[1][:-1]
+    experimentRoleA = tab_split[18].split('(')[1][:-1]
+    experimentRoleB = tab_split[19].split('(')[1][:-1]
+    hostOrganism = [tax.split(':')[1].split('(')[0] for tax in tab_split[28].split('|')]
+    creation = tab_split[30]
+    update = tab_split[31]
+    featuresA = tab_split[36].split('(')[1][:-1]
+    featuresB = tab_split[37].split('(')[1][:-1]
+    stoichiometryA = tab_split[38]
+    stoichiometryB = tab_split[39]
+    idMethodA = tab_split[40].split('(')[1][:-1]
+    idMethodB = tab_split[41].split('(')[1][:-1]
+    return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId,
+            bioRoleA, bioRoleB, experimentRoleA, experimentRoleB, hostOrganism, creation, update, featuresA, featuresB,
+            stoichiometryA, stoichiometryB, idMethodA, idMethodB]
 
-	for i, line in enumerate(data_lines):
-
-		if (i % 10000 == 0):
-			sys.stderr.write(".")
-		# Add classes
-        # \t for horizontal tab
-		interaction_id = line.split('\t')[10]
-		pubmed_id = line.split('\t')[5]
-		entrez_1 = line.split('\t')[0]
-		entrez_2 = line.split('\t')[1]
-
-		interaction = URIRef(ppi[interaction_id])
-		reference = URIRef(pmed[pubmed_id])
-		gene1 = URIRef(ppi[entrez_1])
-		gene2 = URIRef(ppi[entrez_2])
-
-		g.add( (interaction, RDF.type, ppi.interaction) )
-		g.add( (reference, RDF.type, ppi.primaryRef) )
-		g.add( (gene1, RDF.type, ppi.interactor) )
-		g.add( (gene2, RDF.type, ppi.interactor) )
-
-		# Bind to interaction
-		method_name = line.split('\t')[2]
-		method_id = line.split('\t')[3]
-		source = line.split('\t')[9]
-		interaction_type = line.split('\t')[8]
-
-		g.add( (interaction, ppi.hasInteractor, gene1) )
-
-		# if self-loop, add type
-		if (interaction, ppi.hasInteractor, gene2) in g:
-			g.add( (interaction, RDF.type, ppi.selfInteractor) )
-		else:
-			g.add( (interaction, ppi.hasInteractor, gene2) )
-
-		g.add( (interaction, ppi.hasReference, reference) )
-
-		g.add( (interaction, ppi.methodName, Literal(method_name)) )
-		g.add( (interaction, ppi.methodID, Literal(method_id)) )
-		g.add( (interaction, ppi.source, Literal(source)) )
-		g.add( (interaction, ppi.interactionType, Literal(interaction_type)) )
-
-		# Bind to reference
-		author = line.split('\t')[4]
-
-		g.add( (reference, ppi.firstAuthor, Literal(author)) )
-		g.add( (reference, ppi.pubmed, Literal(pubmed_id)) )
-
-		# Bind to interactor
-		taxid_1 = line.split('\t')[6]
-		taxid_2 = line.split('\t')[7]
-
-		g.add( (gene1, ppi.taxId, Literal(taxid_1)) )
-		g.add( (gene2, ppi.taxId, Literal(taxid_2)) )
-		g.add( (gene1, ppi.entrez, Literal(entrez_1)) )
-		g.add( (gene2, ppi.entrez, Literal(entrez_2)) )
-
-
-		if entrez_1 in genename_dict:
-			genename_1 = genename_dict[entrez_1]
-			g.add( (gene1, ppi.geneName, Literal(genename_1)) )
-		if entrez_2 in genename_dict:
-			genename_2 = genename_dict[entrez_2]
-			g.add( (gene2, ppi.geneName, Literal(genename_2)) )
-
-	return g
-
-def create_schema():
-    schema = Graph() # create new schema
-
-	# Import Namespaces and Schema
-	ppi = Namespace("http://ppi2rdf.org/proteins#")
-	xmls = Namespace("http://www.w3.org/2001/XMLSchema#")
-
-	# Classes
-	schema.add( (ppi.interaction, RDF.type, OWL.Class) ) 	# the interaction id
-	schema.add( (ppi.interactor, RDF.type, OWL.Class) ) 	# the entrez id
-	schema.add( (ppi.primaryRef, RDF.type, OWL.Class) ) 	# the pubmed id
-
-	# Subclasses
-	schema.add( (ppi.psdGene, RDF.type, OWL.Class) ) # post-synaptic density gene
-	schema.add( (ppi.psdGene, RDFS.subClassOf, ppi.interactor) )
-
-	schema.add( (ppi.selfInteractor, RDF.type, OWL.Class) )
-	schema.add( (ppi.selfInteractor, RDFS.subClassOf, ppi.interaction) )
-
-	# Interaction Properties
-	schema.add( (ppi.hasInteractor, RDF.type, OWL.ObjectProperty) )
-	schema.add( (ppi.hasInteractor, RDFS.domain, ppi.interaction) )
-	schema.add( (ppi.hasInteractor, RDFS.range, ppi.interactor) )
-
-	schema.add( (ppi.hasReference, RDF.type, OWL.ObjectProperty) )
-	schema.add( (ppi.hasReference, RDFS.domain, ppi.interaction) )
-	schema.add( (ppi.hasReference, RDFS.range, ppi.primaryRef) )
-
-	schema.add( (ppi.methodName, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.methodName, RDFS.domain, ppi.interaction) )
-	schema.add( (ppi.methodName, RDFS.range, xmls.string) )
-
-	schema.add( (ppi.methodId, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.methodId, RDFS.domain, ppi.interaction) )
-	schema.add( (ppi.methodId, RDFS.range, xmls.string) )
-
-	schema.add( (ppi.source, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.source, RDFS.domain, ppi.interaction) )
-	schema.add( (ppi.source, RDFS.range, xmls.string) )
-
-	schema.add( (ppi.interactionType, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.interactionType, RDFS.domain, ppi.interaction) )
-	schema.add( (ppi.interactionType, RDFS.range, xmls.string) )
-
-	# Interactor Properties
-
-	schema.add( (ppi.entrez, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.entrez, RDFS.domain, ppi.interactor) )
-	schema.add( (ppi.entrez, RDFS.range, xmls.string) )
-
-	schema.add( (ppi.taxId, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.taxId, RDFS.domain, ppi.interactor) )
-	schema.add( (ppi.taxId, RDFS.range, xmls.string) )
-
-	schema.add( (ppi.geneName, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.geneName, RDFS.domain, ppi.interactor) )
-	schema.add( (ppi.geneName, RDFS.range, xmls.string) )
-
-	# homologene  (interactor) <--> (interactor)
-	schema.add( (ppi.hasHomologene, RDF.type, OWL.ObjectProperty) )
-	schema.add( (ppi.hasHomologene, RDFS.domain, ppi.interactor) )
-	schema.add( (ppi.hasHomologene, RDFS.range, ppi.interactor) )
-
-	# PrimaryRef Properties
-
-	schema.add( (ppi.pubmed, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.pubmed, RDFS.domain, ppi.primaryRef) )
-	schema.add( (ppi.pubmed, RDFS.range, xmls.string) )
-
-	schema.add( (ppi.firstAuthor, RDF.type, OWL.DatatypeProperty) )
-	schema.add( (ppi.firstAuthor, RDFS.domain, ppi.primaryRef) )
-	schema.add( (ppi.firstAuthor, RDFS.range, xmls.string) )
-
-    return schema
-
-def parse(filepath):
-    data_lines = []
-    genename_dict = {}
-    gh = Graph()
-    gpsd = Graph()
-    schema = create_schema()
-    if data_lines != []:
-        g = store_rdf(data_lines, genename_dict)
-    graph = gs + g + gh + gpsd
-    graph.serialize("downloads", format='nt')
+#for testing
+if __name__ == '__main__':
+    filename = sys.argv[1]
+    source = sys.argv[2]
+    print(parse(filename, source))
