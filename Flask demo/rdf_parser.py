@@ -202,7 +202,8 @@ def store_rdf(filtered, source):
         rdf.add((interaction, ppi.hasReference, reference))
         rdf.add((interaction, ppi.methodName, Literal(line[2]))) # the detection method
         #rdf.add((interaction, ppi.methodId, Literal(methodId)))
-        rdf.add((interaction, ppi.source, Literal(line[7]))) # the interaction type
+        rdf.add((interaction, ppi.source, Literal(line[8]))) # the source db
+        rdf.add((interaction, ppi.interactionType, Literal(line[7]))) # the interaction type
 
         author = line[3]
 
@@ -214,7 +215,21 @@ def store_rdf(filtered, source):
         rdf.add((geneA, ppi.entrez, Literal(line[0]))) # entrez id A
         rdf.add((geneB, ppi.entrez, Literal(line[1]))) # entrez id B
         if source == "intact":
-            pass
+            rdf.add((geneA, ppi.bioRole, Literal(line[10]))) # bioRoleA
+            rdf.add((geneB, ppi.bioRole, Literal(line[11]))) # bioRoleB
+            rdf.add((geneA, ppi.experimentRole, Literal(line[12]))) # experimentalRoleA
+            rdf.add((geneB, ppi.experimentRole, Literal(line[13]))) # experimentalRoleB
+
+            rdf.add((interaction, ppi.hostOrganism, Literal(line[14]))) # interaction host organism (-1 in vitro)
+            rdf.add((interaction, ppi.creation, Literal(line[15]))) # creation date
+            rdf.add((interaction, ppi.update, Literal(line[16]))) # update date
+
+            rdf.add((geneA, ppi.features, Literal(line[17]))) # interactor A features
+            rdf.add((geneB, ppi.features, Literal(line[18]))) # interactor B features
+            rdf.add((geneA, ppi.stoichiometry, Literal(line[19]))) # stoichiometry interactor A
+            rdf.add((geneB, ppi.stoichiometry, Literal(line[20]))) # stoichiometry interactor B
+            rdf.add((geneA, ppi.idMethod, Literal(line[21]))) # idMethod interactor A
+            rdf.add((geneB, ppi.idMethod, Literal(line[22]))) # idMethod interactor B
 
     return rdf
 
@@ -227,4 +242,4 @@ if __name__ == '__main__':
     filtered = parse(filename, source)
     rdf = store_rdf(filtered, source)
     final = schema + rdf
-    final.serialize(destination="/downloads", format='nt')
+    final.serialize(destination="downloads", format='nt')
