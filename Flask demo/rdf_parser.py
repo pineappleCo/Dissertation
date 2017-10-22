@@ -7,9 +7,9 @@ def parse(filename, source):
     with open(filename) as f:
         datalines = f.read().splitlines()
     datalines.pop(0) #remove first list item
-    print(datalines)
+    #print(datalines)
     tabsplit_datalines = [line.split('\t') for line in datalines]
-    print(tabsplit_datalines)
+    #print(tabsplit_datalines)
     if source == "biogrid":
         filtered = [biogrid_filter(line) for line in tabsplit_datalines]
     elif source == "dip":
@@ -183,7 +183,7 @@ def store_rdf(filtered, source):
 
     for line in filtered:
         interaction = URIRef(ppi[line[9]]) # the interaction id
-        reference = URIRef(ppi[line[4]]) # the pubmed id
+        reference = URIRef(ppi[line[4]]) # pubmed id
         geneA = URIRef(ppi[line[0]]) # the interactorA id
         geneB = URIRef(ppi[line[1]]) # the interactorB id
 
@@ -208,7 +208,8 @@ def store_rdf(filtered, source):
         author = line[3]
 
         rdf.add((reference, ppi.firstAuthor, Literal(author)))
-        rdf.add((reference, ppi.pubmed, Literal(line[4]))) # the pubmed id
+        for i in range(len(line[4])):
+            rdf.add((reference, ppi.pubmed, Literal(line[4][i]))) # the pubmed id
 
         rdf.add((geneA, ppi.taxId, Literal(line[5]))) # tax id A
         rdf.add((geneB, ppi.taxId, Literal(line[6]))) # tax id B
@@ -238,7 +239,7 @@ if __name__ == '__main__':
     filename = sys.argv[1]
     source = sys.argv[2]
     schema = build_schema(source)
-    print(parse(filename, source))
+    #print(parse(filename, source))
     filtered = parse(filename, source)
     rdf = store_rdf(filtered, source)
     final = schema + rdf
