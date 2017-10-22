@@ -74,7 +74,7 @@ def intact_filter(tab_split):
             bioRoleA, bioRoleB, experimentRoleA, experimentRoleB, hostOrganism, creation, update, featuresA, featuresB,
             stoichiometryA, stoichiometryB, idMethodA, idMethodB]
 
-def schema(source):
+def build_schema(source):
     schema = Graph()
 
     ppi = Namespace("http://ppi2rdf.org/proteins#")
@@ -176,9 +176,55 @@ def schema(source):
 
     return schema
 
+def store_rdf(filtered, source):
+    ppi = Namespace("http://ppi2rdf.org/proteins#")
+
+    rdf = Graph()
+
+    for line in filtered:
+        interaction = URIRef(ppi[line[9]]) # the interaction id
+        reference = URIRef(ppi[line[4]]) # the pubmed id
+        geneA = URIRef(ppi[line[0]]) # the interactorA id
+        geneB = URIRef(ppi[line[1]]) # the interactorB id
+
+        rdf.add((interaction, RDF.type, ppi.interaction))
+        rdf.add((reference, RDF.type, ppi.primaryRef))
+        rdf.add((geneA, RDF.type, ppi.interactor))
+        rdf.add((geneB, RDF.type, ppi.interactor))
+
+        rdf.add((interaction, ppi.hasInteractor, geneA))
+
+        if(interaction, ppi.hasInteractor, geneB) in rdf:
+            rdf.add((interaction, RDF.type, ppi.selfInteractor))
+        else:
+            rdf.add((interaction, ppi.hasInteractor, geneB))
+
+        rdf.add((interaction, ppi.hasReference, reference))
+        rdf.add((interaction, ppi.methodName, Literal(line[2]))) # the detection method
+        #rdf.add((interaction, ppi.methodId, Literal(methodId)))
+        rdf.add((interaction, ppi.source, Literal(line[7]))) # the interaction type
+
+        author = line[3]
+
+        rdf.add((reference, ppi.firstAuthor, Literal(author)))
+        rdf.add((reference, ppi.pubmed, Literal(line[4]))) # the pubmed id
+
+        rdf.add((geneA, ppi.taxId, Literal(line[5]))) # tax id A
+        rdf.add((geneB, ppi.taxId, Literal(line[6]))) # tax id B
+        rdf.add((geneA, ppi.entrez, Literal(line[0]))) # entrez id A
+        rdf.add((geneB, ppi.entrez, Literal(line[1]))) # entrez id B
+        if source == "intact":
+            pass
+
+    return rdf
+
 #for testing
 if __name__ == '__main__':
     filename = sys.argv[1]
     source = sys.argv[2]
-    schema = schema(source)
+    schema = build_schema(source)
     print(parse(filename, source))
+    filtered = parse(filename, source)
+    rdf = store_rdf(filtered, source)
+    final = schema + rdf
+    final.serialize(destination="/downloads", format='nt')
