@@ -1,11 +1,13 @@
 import sys
 from rdflib.namespace import Namespace, RDF, URIRef, RDFS, OWL
 from rdflib import Graph, Literal, BNode
+import string
 
 def parse(filename, source):
     #read each line is a string in list of strings
     with open(filename) as f:
         datalines = f.read().splitlines()
+    f.close()
     datalines.pop(0) #remove first list item
     #print(datalines)
     tabsplit_datalines = [line.split('\t') for line in datalines]
