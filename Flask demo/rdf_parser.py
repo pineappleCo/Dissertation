@@ -2,6 +2,7 @@ import sys
 from rdflib.namespace import Namespace, RDF, URIRef, RDFS, OWL
 from rdflib import Graph, Literal, BNode
 import string
+import graph_vis
 
 def parse(filename, source):
     #read each line is a string in list of strings
@@ -257,5 +258,7 @@ if __name__ == '__main__':
     #print(parse(filename, source))
     filtered = parse(filename, source)
     rdf = store_rdf(filtered, source)
+    print(rdf)
+    graph_vis.visualize_graph(rdf)
     final = schema + rdf
     final.serialize(destination="downloads", format='nt')
