@@ -1,25 +1,23 @@
 from rdflib import Graph, Literal
 from rdflib.namespace import URIRef
-import igraph
-import plotly
-from plotly.graph_objs import *
+#import python-igraph as igraph
+#import plotly
+#from plotly.graph_objs import *
 
 def visualize_graph(graph):
     print("starting graph_viz")
     interactor_triples = graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None))
     for triple in graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)):
         print(triple)
-    interactions = set([subject_object[0] for subject_object in interactor_triples])
-    print(interactions)
-    interactors = set([subject_object[1] for subject_object in interactor_triples])
-    print(interactors)
-    node_count = len(interactors)
-    edges = []
-    for interaction in interactions:
-        interactors_gen = graph.objects(subject=URIRef(interaction), predicate=URIRef('ppi2rdf.org/proteins#hasInteractor'))
-        interactors_temp = [interactor for interactor in interactors_gen]
-        interactors_tup = (interactors_temp[0], interactors_temp[1])
-        edges.append(interactors_tup)
+    total_interactions = set([triple[0] for triple in interactor_triples])
+    total_interactors = set([triple[2] for triple in interactor_triples])
+    node_count = len(total_interactors)
+    interactors_per_interaction = []
+    for interaction in total_interactions:
+        interactors = [triple[2] for triple in graph.triples((interaction, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None))]
+        interactors_per_interaction.append(interactors)
+    print(interactors_per_interaction)
+    print(set([int_pair for int_pair in interactors_per_interaction if len(int_pair) < 2]))
     viz = igraph.Graph(edges, directed=False)
     #extracting node info will go here....
     kk_layout = viz.layout('kk', dim=3)
