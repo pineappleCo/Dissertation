@@ -1,14 +1,12 @@
 from rdflib import Graph, Literal
 from rdflib.namespace import URIRef
-#import python-igraph as igraph
-#import plotly
-#from plotly.graph_objs import *
+import igraph
+import plotly
+from plotly.graph_objs import *
 
 def visualize_graph(graph):
     print("starting graph_viz")
-    interactor_triples = graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None))
-    #for triple in graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)):
-        #print(triple)
+    interactor_triples = list(graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)))[:10000]
     total_interactions = set([triple[0] for triple in interactor_triples])
     total_interactors = set([triple[2] for triple in interactor_triples])
     node_count = len(total_interactors)
@@ -19,10 +17,10 @@ def visualize_graph(graph):
     #print(interactors_per_interaction)
     self_interactors = [protein for protein in interactors_per_interaction if len(protein) == 1]
     interaction_pairs = [protein_pair for protein_pair in interactors_per_interaction if len(protein_pair) > 1]
-    self_interactor_edges = [(self_int[0], self_int[0]) for self_int in self_interactors]
-    pair_interactor_edges = [(int_pair[0], int_pair[1]) for int_pair in interaction_pairs]
+    self_interactor_edges = [(int(str(self_int[0]).split('-')[1][:-1]), int(str(self_int[0]).split('-')[1][:-1])) for self_int in self_interactors]
+    pair_interactor_edges = [(int(str(int_pair[0]).split('-')[1][:-1]), int(str(int_pair[1]).split('-')[1][:-1])) for int_pair in interaction_pairs]
     edges = self_interactor_edges + pair_interactor_edges
-    viz = igraph.Graph(edges, directed=False)
+    viz = igraph.Graph.TupleList(edges)
     #extracting node info will go here....
     kk_layout = viz.layout('kk', dim=3)
     X_nodes = [kk_layout[i][0] for i in range(node_count)]
@@ -31,7 +29,7 @@ def visualize_graph(graph):
     X_edges = []
     Y_edges = []
     Z_edges = []
-    for edge in edges:
+    for edge in [e.tuple for e in viz.es]:
         X_edges += [kk_layout[edge[0]][0], kk_layout[edge[1]][0], None]
         Y_edges += [kk_layout[edge[0]][1], kk_layout[edge[1]][1], None]
         Z_edges += [kk_layout[edge[0]][2], kk_layout[edge[1]][2], None]
