@@ -3,6 +3,7 @@ from rdflib.namespace import Namespace, RDF, URIRef, RDFS, OWL
 from rdflib import Graph, Literal, BNode
 import string
 import graph_vis
+import parse_validation
 
 def parse(filename, source):
     #read each line is a string in list of strings
@@ -254,11 +255,14 @@ def store_rdf(filtered, source):
 if __name__ == '__main__':
     filename = sys.argv[1]
     source = sys.argv[2]
+    viz = sys.argv[3]
     schema = build_schema(source)
     #print(parse(filename, source))
     filtered = parse(filename, source)
     rdf = store_rdf(filtered, source)
     print(rdf)
-    graph_vis.visualize_graph(rdf)
+    if viz == 'graph':
+        graph_vis.visualize_graph(rdf)
     final = schema + rdf
     final.serialize(destination="downloads", format='nt')
+    parse_validation.validate(filename, final)

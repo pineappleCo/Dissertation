@@ -10,6 +10,7 @@ def visualize_graph(graph):
     total_interactions = set([triple[0] for triple in interactor_triples])
     total_interactors = set([triple[2] for triple in interactor_triples])
     node_count = len(total_interactors)
+    print(node_count)
     interactors_per_interaction = []
     for interaction in total_interactions:
         interactors = [triple[2] for triple in graph.triples((interaction, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None))]
@@ -19,7 +20,10 @@ def visualize_graph(graph):
     interaction_pairs = [protein_pair for protein_pair in interactors_per_interaction if len(protein_pair) > 1]
     self_interactor_edges = [(int(str(self_int[0]).split('-')[1][:-1]), int(str(self_int[0]).split('-')[1][:-1])) for self_int in self_interactors]
     pair_interactor_edges = [(int(str(int_pair[0]).split('-')[1][:-1]), int(str(int_pair[1]).split('-')[1][:-1])) for int_pair in interaction_pairs]
-    edges = self_interactor_edges + pair_interactor_edges
+    print("number of self interactors: " + str(len(self_interactor_edges)))
+    print("number of (non-self) interactors: " + str(len(pair_interactor_edges)))
+    #edges = self_interactor_edges + pair_interactor_edges
+    edges = pair_interactor_edges
     viz = igraph.Graph.TupleList(edges)
     #extracting node info will go here....
     kk_layout = viz.layout('kk', dim=3)
@@ -44,4 +48,4 @@ def visualize_graph(graph):
                     margin=Margin(t=100), hovermode='closest')
     data = Data([trace1, trace2])
     fig = Figure(data=data, layout=layout)
-    plotly.offline.plot(fig, filename='pin.html')
+    plotly.offline.plot(fig, filename='dip50k_kk.html')
