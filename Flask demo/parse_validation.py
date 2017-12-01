@@ -37,17 +37,20 @@ def get_trip_list(filename):
     datalines.pop(0) #remove first list item
     triple_store = [line.split('\n') for line in datalines]
     #print(triple_store)
-    seperated_triples = [trip[0].split(" ")[:2] for trip in triple_store] # list of lists of 3 strings (one rdf triple)
-    #print(seperated_triples)
+    #todo: use different split for literals
+    seperated_triples = [trip[0].split(" ")[:3] for trip in triple_store] # list of lists of 3 strings (one rdf triple)
+    print(seperated_triples)
     return seperated_triples
 
 def find(triples, target, not_target=''):
     enumerated_triples = enumerate(triples)
     if not_target == '':
+        print("just target")
         subject_contains = [trip for trip in enumerated_triples if trip[1][0].find(target) != -1]
         predicate_contains = [trip for trip in enumerated_triples if trip[1][1].find(target) != -1]
         object_contains = [trip for trip in enumerated_triples if trip[1][2].find(target) != -1]
     else:
+        print("not target included")
         subject_contains = [trip for trip in enumerated_triples if trip[1][0].find(target) != -1 and trip[1][0].find(not_target) == -1]
         predicate_contains = [trip for trip in enumerated_triples if trip[1][1].find(target) != -1 and trip[1][1].find(not_target) == -1]
         object_contains = [trip for trip in enumerated_triples if trip[1][2].find(target) != -1 and trip[1][2].find(not_target) == -1]
@@ -65,7 +68,7 @@ if __name__ == '__main__':
     source = sys.argv[1]
     trips = get_trip_list(source)
     target = sys.argv[2]
-    if len(sys.argv) > 3:
+    if len(sys.argv) == 4:
         not_target = sys.argv[3]
         find(trips, target, not_target=not_target)
     else:

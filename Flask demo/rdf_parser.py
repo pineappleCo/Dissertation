@@ -206,7 +206,7 @@ def store_rdf(filtered, source):
         geneB = URIRef(ppi[line[1]]) # the interactorB id
 
         rdf.add((interaction, RDF.type, ppi.interaction))
-        rdf.add((reference, RDF.type, ppi.primaryRef))
+        #rdf.add((reference, RDF.type, ppi.primaryRef))
         rdf.add((geneA, RDF.type, ppi.interactor))
         rdf.add((geneB, RDF.type, ppi.interactor))
 
@@ -217,7 +217,9 @@ def store_rdf(filtered, source):
         else:
             rdf.add((interaction, ppi.hasInteractor, geneB))
 
-        rdf.add((interaction, ppi.hasReference, reference))
+        #rdf.add((interaction, ppi.hasReference, reference))
+        for i in range(len(line[4])):
+            rdf.add((interaction, ppi.hasReference, Literal(line[4][i])))
         rdf.add((interaction, ppi.methodName, Literal(line[2]))) # the detection method
         #rdf.add((interaction, ppi.methodId, Literal(methodId)))
         rdf.add((interaction, ppi.source, Literal(line[8]))) # the source db
