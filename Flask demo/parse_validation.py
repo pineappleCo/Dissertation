@@ -10,7 +10,7 @@ def validate(filename, final):
     datalines.pop(0) #remove first list item
     tabsplit_datalines = [line.split('\t') for line in datalines]
     interactor_triples = list(final.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)))
-    print(interactor_triples)
+    #print(interactor_triples)
     interaction_count = len(set([trip[0] for trip in interactor_triples]))
     print(set([trip[0] for trip in interactor_triples]))
     print("There are " + str(interaction_count) + " interactions in the generated RDF.")

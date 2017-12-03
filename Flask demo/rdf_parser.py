@@ -39,12 +39,12 @@ def biogrid_filter(tab_split):
 def dip_filter(tab_split):
     interactorAId = tab_split[0].split('|')[0]
     interactorBId = tab_split[1].split('|')[0]
-    detectionMethod = tab_split[6].split('(')[1][:-1]
+    detectionMethod = (tab_split[6].split('(')[1][:-1]).split(")")[0]
     author = tab_split[7]
     pubId = list(set([pub[7:] for pub in tab_split[8].split('|')]))
     taxA = tab_split[9][6:].split('(')[0][:-1]
     taxB = tab_split[10][6:].split('(')[0][:-1]
-    interactionType = tab_split[11].split('(')[1][:-1]
+    interactionType = (tab_split[11].split('(')[1][:-1]).split(")")[0]
     source = "dip"
     interactionId = tab_split[13]
     return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId]
@@ -68,7 +68,13 @@ def intact_filter(tab_split):
         taxB = list(set([pub.split(':')[1].split('(')[0] for pub in tab_split[10].split('|')]))
     interactionType = tab_split[11].split('(')[1][:-1]
     source = "intact"
-    interactionId = list(set([id.split(':')[1] for id in tab_split[13].split('|')]))
+    interactionIdList = list(set([id.split(':')[1] for id in tab_split[13].split('|')]))
+
+    #use ebi id if possible
+    interactionId = [id for id in interactionIdList if id[:2] == 'EBI']
+    if interactionId == []:
+        interactionId = interactionIdList[0]
+
     bioRoleA = tab_split[16].split('(')[1][:-1]
     if tab_split[17] == '-':
         bioRoleB = '-'
@@ -211,11 +217,14 @@ def store_rdf(filtered, source):
         rdf.add((geneB, RDF.type, ppi.interactor))
 
         rdf.add((interaction, ppi.hasInteractor, geneA))
-
+        rdf.add((interaction, ppi.hasInteractor, geneB))
+        """
         if(interaction, ppi.hasInteractor, geneB) in rdf:
             rdf.add((interaction, RDF.type, ppi.selfInteractor))
         else:
             rdf.add((interaction, ppi.hasInteractor, geneB))
+        """
+
 
         #rdf.add((interaction, ppi.hasReference, reference))
         for i in range(len(line[4])):
