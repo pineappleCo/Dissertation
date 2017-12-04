@@ -6,7 +6,7 @@ from plotly.graph_objs import *
 
 def visualize_graph(graph):
     print("starting graph_viz")
-    interactor_triples = list(graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)))[:10000]
+    interactor_triples = list(graph.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)))
     total_interactions = set([triple[0] for triple in interactor_triples])
     total_interactors = set([triple[2] for triple in interactor_triples])
     node_count = len(total_interactors)
@@ -48,4 +48,4 @@ def visualize_graph(graph):
                     margin=Margin(t=100), hovermode='closest')
     data = Data([trace1, trace2])
     fig = Figure(data=data, layout=layout)
-    plotly.offline.plot(fig, filename='dip50k_kk.html')
+    plotly.offline.plot(fig, filename='dip.html')
