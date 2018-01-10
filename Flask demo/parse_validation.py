@@ -9,12 +9,26 @@ def validate(filename, final):
     f.close()
     datalines.pop(0) #remove first list item
     tabsplit_datalines = [line.split('\t') for line in datalines]
-    interactor_triples = list(final.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)))
+    #interactor_triples = list(final.triples((None, URIRef('http://ppi2rdf.org/proteins#hasInteractor'), None)))
+    interactor_triples = list(final.triples((None, URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), URIRef('http://ppi2rdf.org/proteins#interaction'))))
     #print(interactor_triples)
-    interaction_count = len(set([trip[0] for trip in interactor_triples]))
-    print(set([trip[0] for trip in interactor_triples]))
+    #interaction_count = len(set([trip[0] for trip in interactor_triples]))
+    interaction_count = len([trip[0] for trip in interactor_triples])
+    #print(set([trip[0] for trip in interactor_triples]))
     print("There are " + str(interaction_count) + " interactions in the generated RDF.")
     print("There are " + str(len(tabsplit_datalines)) + " interactions in the chosen dataset: " + filename)
+
+def missing(interactions, final):
+    print(len(set(interactions)))
+    interaction_triples = final.triples((None, URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), URIRef('http://ppi2rdf.org/proteins#interaction')))
+    interaction_vals = [str(trip[0])[28:] for trip in interaction_triples]
+    print(len(interaction_vals))
+    missing = 0
+    for interaction in interactions:
+        if interaction not in interaction_vals:
+            missing = missing + 1
+            print(interaction)
+    print(missing)
 
 def validate_serialized(source, rdf):
     rdf_db = Graph()

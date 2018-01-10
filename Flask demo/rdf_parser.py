@@ -13,6 +13,7 @@ def parse(filename, source):
     datalines.pop(0) #remove first list item
     #print(datalines)
     tabsplit_datalines = [line.split('\t') for line in datalines]
+    print(str(len(tabsplit_datalines)))
     if source == "biogrid":
         filtered = [biogrid_filter(line) for line in tabsplit_datalines]
     elif source == "dip":
@@ -21,6 +22,7 @@ def parse(filename, source):
         filtered = [intact_filter(line) for line in tabsplit_datalines]
     else:
         return "not a supported source, supported sources are biogrid, intact and dip"
+    print(str(len(filtered)))
     return filtered
 
 def biogrid_filter(tab_split):
@@ -204,9 +206,10 @@ def store_rdf(filtered, source):
     pubmed = Namespace("http://www.ncbi.nlm.nih.gov/pubmed/")
 
     rdf = Graph()
-
+    j = 0
     for line in filtered:
         interaction = URIRef(ppi[line[9]]) # the interaction id
+        j = j + 1
         reference = URIRef(pubmed[line[4]]) # pubmed id
         geneA = URIRef(ppi[line[0]]) # the interactorA id
         geneB = URIRef(ppi[line[1]]) # the interactorB id
@@ -259,7 +262,7 @@ def store_rdf(filtered, source):
                 rdf.add((geneB, ppi.stoichiometry, Literal(line[18]))) # stoichiometry interactor B
                 rdf.add((geneA, ppi.idMethod, Literal(line[19]))) # idMethod interactor A
                 rdf.add((geneB, ppi.idMethod, Literal(line[20]))) # idMethod interactor B
-
+    print(j)
     return rdf
 
 #for testing
@@ -270,6 +273,7 @@ if __name__ == '__main__':
     schema = build_schema(source)
     #print(parse(filename, source))
     filtered = parse(filename, source)
+    interactions = [i[9] for i in filtered]
     rdf = store_rdf(filtered, source)
     print(rdf)
     if viz == 'graph':
@@ -277,3 +281,4 @@ if __name__ == '__main__':
     final = schema + rdf
     final.serialize(destination="downloads", format='nt')
     parse_validation.validate(filename, final)
+    parse_validation.missing(interactions, final)
