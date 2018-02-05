@@ -3,13 +3,17 @@ from rdflib.namespace import URIRef
 import plotly
 from plotly.graph_objs import *
 
-dip = Graph()
-biogrid = Graph()
-dip.parse("downloads/dip_fix", format='nt')
-biogrid.parse("downloads/biogrid_fix", format='nt')
+#dip = Graph()
+#biogrid = Graph()
+intact = Graph()
+#dip.parse("downloads/dip_fix", format='nt')
+#biogrid.parse("downloads/biogrid_fix", format='nt')
+intact.parse("downloads/intact_rdf", format='nt')
 
-sources = [dip, biogrid]
-str_sources = ['DIP', 'Biogrid']
+#sources = [dip, biogrid, intact]
+#str_sources = ['DIP', 'Biogrid', 'intact']
+sources = [intact]
+str_sources = ['intact']
 i = 0
 
 for db in sources:

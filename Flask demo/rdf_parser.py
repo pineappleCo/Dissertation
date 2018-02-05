@@ -44,8 +44,8 @@ def dip_filter(tab_split):
     detectionMethod = (tab_split[6].split('(')[1][:-1]).split(")")[0]
     author = tab_split[7]
     pubId = list(set([pub[7:] for pub in tab_split[8].split('|')]))
-    taxA = tab_split[9][6:].split('(')[0][:-1]
-    taxB = tab_split[10][6:].split('(')[0][:-1]
+    taxA = tab_split[9][6:].split('(')[0]
+    taxB = tab_split[10][6:].split('(')[0]
     interactionType = (tab_split[11].split('(')[1][:-1]).split(")")[0]
     source = "dip"
     interactionId = tab_split[13]

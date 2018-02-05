@@ -8,7 +8,7 @@ def edges_to_ids(nodes, edges):
     return [(nodes.index(edge[0]), nodes.index(edge[1])) for edge in edges]
 
 def get_verbose_labels(nodes):
-    
+    None
 
 def vis_pin(pin, filename):
     g = igraph.Graph()
