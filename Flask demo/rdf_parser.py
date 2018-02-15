@@ -13,7 +13,6 @@ def parse(filename, source):
     datalines.pop(0) #remove first list item
     #print(datalines)
     tabsplit_datalines = [line.split('\t') for line in datalines]
-    print(str(len(tabsplit_datalines)))
     if source == "biogrid":
         filtered = [biogrid_filter(line) for line in tabsplit_datalines]
     elif source == "dip":
@@ -29,14 +28,18 @@ def biogrid_filter(tab_split):
     interactorAId = tab_split[0][22:]
     interactorBId = tab_split[1][22:]
     detectionMethod = tab_split[6].split('(')[1][:-1]
-    author = tab_split[7]
+    author = tab_split[7].split('(')[0][1:-1]
+    try:
+        year = tab_split[7].split('(')[1][:-2]
+    except IndexError:
+        year = '-'
     pubId = tab_split[8][7:]
     taxA = tab_split[9][6:]
     taxB = tab_split[10][6:]
     interactionType = tab_split[11].split('(')[1][:-1]
     source = "biogrid"
     interactionId = tab_split[13][8:]
-    return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId]
+    return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId, year]
 
 def dip_filter(tab_split):
     interactorAId = tab_split[0].split('|')[0]
@@ -61,7 +64,11 @@ def intact_filter(tab_split):
     else:
         interactorBId = tab_split[1][10:]
     detectionMethod = tab_split[6].split('(')[1][:-1]
-    author = tab_split[7]
+    author = tab_split[7].split('(')[0][:-1]
+    try:
+        year = tab_split[7].split('(')[1][:-1]
+    except IndexError:
+        year = '-'
     pubId = list(set([pub.split(':')[1] for pub in tab_split[8].split('|')]))
     taxA = list(set([pub.split(':')[1].split('(')[0] for pub in tab_split[9].split('|')]))
     if tab_split[10] == '-':
@@ -99,9 +106,9 @@ def intact_filter(tab_split):
         else:
             idMethodB = tab_split[41].split('(')[1][:-1]
         return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId,
-            bioRoleA, bioRoleB, experimentRoleA, experimentRoleB, hostOrganism, creation, update, stoichiometryA, stoichiometryB, idMethodA, idMethodB]
+            bioRoleA, bioRoleB, experimentRoleA, experimentRoleB, hostOrganism, creation, update, stoichiometryA, stoichiometryB, idMethodA, idMethodB, year]
     return [interactorAId, interactorBId, detectionMethod, author, pubId, taxA, taxB, interactionType, source, interactionId,
-            bioRoleA, bioRoleB, experimentRoleA, experimentRoleB]
+            bioRoleA, bioRoleB, experimentRoleA, experimentRoleB, year]
 
 def build_schema(source):
     schema = Graph()
@@ -199,6 +206,11 @@ def build_schema(source):
     schema.add((ppi.firstAuthor, RDFS.domain, ppi.primaryRef))
     schema.add((ppi.firstAuthor, RDFS.range, xmls.string))
 
+    if source == "biogrid" or source == "intact":
+        schema.add((ppi.year, RDF.type, OWL.DatatypeProperty))
+        schema.add((ppi.year, RDFS.domain, ppi.primaryRef))
+        schema.add((ppi.year, RDFS.range, xmls.integer))
+
     return schema
 
 def store_rdf(filtered, source):
@@ -230,8 +242,11 @@ def store_rdf(filtered, source):
 
 
         #rdf.add((interaction, ppi.hasReference, reference))
-        for i in range(len(line[4])):
-            rdf.add((interaction, ppi.hasReference, Literal(line[4][i])))
+        if source != "biogrid":
+            for i in range(len(line[4])):
+                rdf.add((interaction, ppi.hasReference, Literal(line[4][i])))
+        else:
+            rdf.add((interaction, ppi.hasReference, Literal(line[4])))
         rdf.add((interaction, ppi.methodName, Literal(line[2]))) # the detection method
         #rdf.add((interaction, ppi.methodId, Literal(methodId)))
         rdf.add((interaction, ppi.source, Literal(line[8]))) # the source db
@@ -240,8 +255,15 @@ def store_rdf(filtered, source):
         author = line[3]
 
         rdf.add((reference, ppi.firstAuthor, Literal(author)))
-        for i in range(len(line[4])):
-            rdf.add((reference, ppi.pubmed, Literal(line[4][i]))) # the pubmed id
+
+        if source != "biogrid":
+            for i in range(len(line[4])):
+                rdf.add((reference, ppi.pubmed, Literal(line[4][i]))) # the pubmed id
+        else:
+            rdf.add((interaction, ppi.hasReference, Literal(line[4])))
+
+        if source == 'biogrid' or source == 'intact':
+            rdf.add((reference, ppi.year, Literal(line[len(line)-1]))) # tax id A
 
         rdf.add((geneA, ppi.taxId, Literal(line[5]))) # tax id A
         rdf.add((geneB, ppi.taxId, Literal(line[6]))) # tax id B

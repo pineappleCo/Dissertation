@@ -112,7 +112,7 @@ def find_connected_components(pin):
         all_ccs.append(cc)
     return all_ccs
 
-'''
+
 sources = ["downloads/dip_fix", "downloads/biogrid_fix"]
 
 dip = Graph()
@@ -122,18 +122,16 @@ tax_ids, counts_per_tax = species(dip)
 ints_per_tax = interactors_per_species(tax_ids, dip)
 check_interactors_per_species(counts_per_tax, ints_per_tax)
 ints_per_action = interactors_per_interaction(dip)
-interactions_check(ints_per_action)
+#interactions_check(ints_per_action)
 ints_with_tax = interactions_with_taxid(ints_per_tax, ints_per_action)
 interactomes = tax_dict(tax_ids, ints_with_tax)
-pickler.pickler('pickles/interactomes', interactomes)
-pins = []
-for i in interactomes.keys():
-    pins.append(get_pin(i, interactomes[i]))
-print('all pins pickled!')
-connected_components = []
-for pin in pins:
-    connected_components.append(find_connected_components(pin))
-'''
+#pickler.pickler('pickles/interactomes', interactomes)
+#pins = []
+#for i in interactomes.keys():
+    #pins.append(get_pin(i, interactomes[i]))
+#print('all pins pickled!')
+
+
 
 
 
