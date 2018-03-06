@@ -16,7 +16,6 @@ def query(sparql_query, source):
     for result_part in result:
         print(result_part)
     runtime = end - start
-    print(result)
     print(runtime)
 
 if __name__ == '__main__':
@@ -24,13 +23,4 @@ if __name__ == '__main__':
     source = sys.argv[2]
     query(sparql_query, source)
 
-    '''
-    qres = g.query(
-    """SELECT DISTINCT ?aname ?bname
-       WHERE {
-          ?a foaf:knows ?b .
-          ?a foaf:name ?aname .
-          ?b foaf:name ?bname .
-       }""")
-    '''
 
